@@ -81,39 +81,66 @@ function showTransactions(transactions) {
   });
 }
 
-showTransactions(account3.transactions);
 
 const createNickNames = (accs) => {
   accs.forEach(acc => {
     acc.nicknames = acc.userName.toLowerCase()
-      .split(' ').map(word => word[0]).join('');
+      .split(' ')
+      .map(word => word[0])
+      .join('');
   });
 };
 createNickNames(accounts);
 
-const showBalance = (trans)=> {
-  const balance = trans.reduce((acc,trans)=>{
-   return acc + trans
-  },0)
-  labelBalance.textContent = `${balance}$`
-}
+const showBalance = (trans) => {
+  const balance = trans.reduce((acc, trans) => {
+    return acc + trans;
+  }, 0);
+  labelBalance.textContent = `${balance}$`;
+};
 
-showBalance(account3.transactions)
 
-const showDepositAndOutAndInterest = (arrTrans)=> {
-  const deposit = arrTrans.filter(trans => trans > 0)
-    .reduce((acc,trans) => {return acc + trans},0)
-  labelSumIn.textContent = `${deposit}$`
 
-  const withdrawal = arrTrans.filter(trans => trans <= 0)
-    .reduce((acc,trans)=>{return acc + trans},0)
-  labelSumOut.textContent = `${withdrawal}$`
+const showDepositAndOutAndInterest = (arrTrans) => {
+  const deposit = arrTrans.transactions.filter(trans => trans > 0)
+    .reduce((acc, trans) => {
+      return acc + trans;
+    }, 0);
+  labelSumIn.textContent = `${deposit}$`;
 
-  const interest = arrTrans.filter(trans => trans > 0)
-    .map(trans => trans * 0.8 / 100)
+  const withdrawal = arrTrans.transactions.filter(trans => trans <= 0)
+    .reduce((acc, trans) => {
+      return acc + trans;
+    }, 0);
+  labelSumOut.textContent = `${withdrawal}$`;
+
+  const interest = arrTrans.transactions.filter(trans => trans > 0)
+    .map(trans => (trans * arrTrans.interest) / 100)
     .filter(trans => trans >= 5)
-    .reduce((acc,trans)=> {return acc + trans})
-  labelSumInterest.textContent = `${interest}$`
-}
+    .reduce((acc, trans) => {
+      return acc + trans;
+    });
+  labelSumInterest.textContent = `${interest}$`;
+};
 
-showDepositAndOutAndInterest(account3.transactions)
+
+let currentAccount;
+
+const getLogin = (e) => {
+  e.preventDefault();
+  currentAccount = accounts.find(acc => acc.nicknames ===
+    inputLoginUsername.value);
+  if (currentAccount?.pin === Number(inputLoginPin.value)){
+    containerApp.style.opacity = 1
+    labelWelcome.textContent = `Рады вас снова видеть ${currentAccount.
+    userName.split(' ')[0]}!`}
+  // clear inputs
+   inputLoginUsername.value = ''
+   inputLoginPin.value = ''
+  inputLoginPin.blur()
+  showBalance(currentAccount.transactions);
+  showDepositAndOutAndInterest(currentAccount);
+  showTransactions(currentAccount.transactions);
+};
+
+btnLogin.addEventListener('click', getLogin);
