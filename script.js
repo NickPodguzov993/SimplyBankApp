@@ -92,13 +92,13 @@ const createNickNames = (accs) => {
 };
 createNickNames(accounts);
 
-const showBalance = (trans) => {
-  const balance = trans.reduce((acc, trans) => {
+const showBalance = (account) => {
+  const balance = account.transactions.reduce((acc, trans) => {
     return acc + trans;
   }, 0);
+  account.balance = balance;
   labelBalance.textContent = `${balance}$`;
 };
-
 
 
 const showDepositAndOutAndInterest = (arrTrans) => {
@@ -123,6 +123,11 @@ const showDepositAndOutAndInterest = (arrTrans) => {
   labelSumInterest.textContent = `${interest}$`;
 };
 
+const updateUi = () => {
+  showBalance(currentAccount);
+  showDepositAndOutAndInterest(currentAccount);
+  showTransactions(currentAccount.transactions);
+};
 
 let currentAccount;
 
@@ -130,17 +135,65 @@ const getLogin = (e) => {
   e.preventDefault();
   currentAccount = accounts.find(acc => acc.nicknames ===
     inputLoginUsername.value);
-  if (currentAccount?.pin === Number(inputLoginPin.value)){
-    containerApp.style.opacity = 1
-    labelWelcome.textContent = `Рады вас снова видеть ${currentAccount.
-    userName.split(' ')[0]}!`}
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    containerApp.style.opacity = 1;
+    labelWelcome.textContent = `Рады вас снова видеть ${currentAccount.userName.split(' ')[0]}!`;
+  }
   // clear inputs
-   inputLoginUsername.value = ''
-   inputLoginPin.value = ''
-  inputLoginPin.blur()
-  showBalance(currentAccount.transactions);
-  showDepositAndOutAndInterest(currentAccount);
-  showTransactions(currentAccount.transactions);
+  inputLoginUsername.value = '';
+  inputLoginPin.value = '';
+  inputLoginPin.blur();
+  updateUi();
 };
 
 btnLogin.addEventListener('click', getLogin);
+
+const moneyTransferTo = (e) => {
+  e.preventDefault();
+  const amountTransfer = Number(inputTransferAmount.value);
+  const recipientNickName = inputTransferTo.value;
+  const recipientAccount = accounts.find(acc => acc.nicknames === recipientNickName);
+  console.log(amountTransfer);
+  console.log(recipientAccount);
+  inputTransferAmount.value = ''
+  inputTransferTo.value = ''
+  if (amountTransfer > 0 && amountTransfer <= currentAccount.balance &&
+    recipientAccount && currentAccount.nicknames !== recipientAccount?.nicknames) {
+    currentAccount.transactions.push(-amountTransfer);
+    recipientAccount.transactions.push(amountTransfer);
+    updateUi();
+  }
+};
+
+btnTransfer.addEventListener('click', moneyTransferTo);
+
+const closeCheck = (e) => {
+  e.preventDefault()
+  console.log('hi');
+  if(inputCloseUsername.value === currentAccount.nicknames &&
+    Number(inputClosePin.value) === currentAccount.pin){
+    console.log('delete account');
+    const currentAccountIndex = accounts.findIndex(acc => acc.nicknames ===
+      currentAccount.nicknames)
+    accounts.splice(currentAccountIndex,1)
+    labelWelcome.textContent = 'Войдите в свой аккаунт'
+    containerApp.style.opacity = 0
+  }
+  inputLoginUsername.value = '';
+  inputLoginPin.value = '';
+}
+
+btnClose.addEventListener('click', closeCheck)
+
+const loanMoney = (e) => {
+  e.preventDefault()
+  const loanAmount = Number(inputLoanAmount.value)
+
+  if(currentAccount.transactions.some(trans => trans >= loanAmount / 10)){
+    currentAccount.transactions.push(loanAmount)
+    updateUi()
+  }
+  inputLoanAmount.value = ''
+}
+
+btnLoan.addEventListener('click', loanMoney)
